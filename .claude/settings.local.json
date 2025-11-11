@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__magic__logo_search",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
