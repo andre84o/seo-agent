@@ -10,6 +10,10 @@ Automatisk SEO-agent med historik och enkel "lärning" för Next.js 15 och Verce
 - 📈 **Google Search Console integration** för CTR och positionsdata
 - 🎯 **Adaptiv prioritering** baserad på score-trender och historik
 - 💡 **Automatiska förbättringsförslag** med impact-nivåer
+- ✏️ **AI-drivna textförslag** - NEW! Klick-för-att-kopiera textoptimering för Title, Meta, H1-H6
+- 🔤 **Nyckelordsanalys** - NEW! Automatisk keyword extraction och density-analys
+- 📖 **Läsbarhetsscore** - NEW! Flesch Reading Ease för varje textförslag
+- ✍️ **Redigerbar text** - NEW! Redigera AI-genererade förslag innan tillämpning
 - 📁 **CSV-export** av audits och förslag
 - 🗄️ **90-dagars retention** med veckosammanfattningar
 - 🚨 **Automatisk flaggning** av sidor med problem
@@ -123,8 +127,37 @@ Efter deployment:
 - **Run Agent**: Kör agenten manuellt för att starta en audit
 - **Score Overview**: Senaste scores för alla sidor med Core Web Vitals
 - **Suggestions**: Genererade förbättringsförslag sorterade efter impact
+- **✏️ Textförslag (NEW!)**: AI-drivna textförbättringar med klick-för-att-kopiera
 - **Recent Runs**: Historik över alla agent-körningar
 - **Export**: Ladda ner data som CSV
+
+### Textförslag - Ny funktion! ✨
+
+Den nya "Textförslag"-fliken ger dig AI-drivna förbättringar för:
+- **Title tags** - Optimerad längd (50-60 tecken) med keywords
+- **Meta descriptions** - 140-160 tecken med CTA
+- **H1-H6 rubriker** - Keyword-optimerade headings
+- **Paragrafer** - Innehållsförbättringar
+- **Bild alt-text** - Beskrivande alt-text
+
+**Funktioner:**
+- ✅ Automatisk nyckelordsanalys och keyword density
+- ✅ Läsbarhetsscore (Flesch Reading Ease)
+- ✅ Redigera förslag innan tillämpning
+- ✅ Kopiera till clipboard med ett klick
+- ✅ Markera som tillämpat/avfärdat
+- ✅ Förslag grupperade per sektion
+
+**Hur man använder:**
+1. Ange URL i textfältet
+2. Klicka "Generera nya förslag"
+3. Granska förslagen sorterade per sektion
+4. Redigera om önskvärt (klicka "✏️ Redigera")
+5. Kopiera texten ("📋 Kopiera")
+6. Klistra in i din CMS/kod
+7. Markera som klar ("✓ Tillämpa")
+
+Se `INSTALLATION.md` för fullständig dokumentation.
 
 ### Manuell körning
 
@@ -206,6 +239,22 @@ Sidor med högst prioritet väljs för nästa körning.
 - `PATCH /api/agent/suggestions` - Uppdatera förslag status
 - `GET /api/agent/export?type=audits|suggestions` - Exportera CSV
 
+### Textförslag (NEW!)
+
+- `GET /api/text-suggestions?url=<url>&status=<status>` - Hämta textförslag
+- `POST /api/text-suggestions` - Generera nya textförslag
+- `PATCH /api/text-suggestions` - Uppdatera/redigera förslag
+- `DELETE /api/text-suggestions?id=<id>` - Ta bort förslag
+
+### Nyckelord (NEW!)
+
+- `GET /api/keywords?url=<url>` - Hämta nyckelordsanalys
+- `POST /api/keywords` - Generera nyckelordsanalys
+
+### Innehållsanalys (NEW!)
+
+- `GET /api/content-analysis?url=<url>` - Hämta innehållsanalys
+
 ### Cron (Internal)
 
 - `GET /api/cron/nightly` - Nattlig körning
@@ -219,6 +268,9 @@ Sidor med högst prioritet väljs för nästa körning.
 - **runs**: Varje agent-körning med stats
 - **audits**: Auditresultat per sida och run (idempotent)
 - **suggestions**: Genererade förslag
+- **text_suggestions** (NEW!): AI-genererade textförslag per sektion
+- **keywords** (NEW!): Nyckelordsanalys och tracking
+- **content_analysis** (NEW!): Djupgående innehållsanalys
 - **gsc_daily**: Google Search Console data per dag
 - **weekly_summaries**: Veckosammanfattningar av äldre data
 

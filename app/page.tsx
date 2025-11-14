@@ -9,9 +9,10 @@ import ScoreOverview from '@/components/dashboard/ScoreOverview';
 import SuggestionsList from '@/components/dashboard/SuggestionsList';
 import RecentRuns from '@/components/dashboard/RecentRuns';
 import ExportData from '@/components/dashboard/ExportData';
+import TextSuggestions from '@/components/dashboard/TextSuggestions';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'suggestions' | 'runs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'suggestions' | 'text-suggestions' | 'runs'>('overview');
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Refresh data efter agent run
@@ -67,6 +68,16 @@ export default function Dashboard() {
                 💡 Suggestions
               </button>
               <button
+                onClick={() => setActiveTab('text-suggestions')}
+                className={`px-6 py-4 text-sm font-medium transition-colors ${
+                  activeTab === 'text-suggestions'
+                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                ✏️ Textförslag
+              </button>
+              <button
                 onClick={() => setActiveTab('runs')}
                 className={`px-6 py-4 text-sm font-medium transition-colors ${
                   activeTab === 'runs'
@@ -83,6 +94,7 @@ export default function Dashboard() {
           <div className="p-6">
             {activeTab === 'overview' && <ScoreOverview key={refreshKey} />}
             {activeTab === 'suggestions' && <SuggestionsList key={refreshKey} />}
+            {activeTab === 'text-suggestions' && <TextSuggestions key={refreshKey} />}
             {activeTab === 'runs' && <RecentRuns key={refreshKey} />}
           </div>
         </div>
