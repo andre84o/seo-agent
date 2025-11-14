@@ -23,7 +23,8 @@ type GSCDailyInsert = Database['public']['Tables']['gsc_daily']['Insert'];
  * Skapar en ny run
  */
 export async function createRun(): Promise<number> {
-  const { data, error } = await supabase
+  // Cast to any to avoid TS type narrowing issues when Database types are out of sync
+  const { data, error } = await (supabase as any)
     .from('runs')
     .insert({
       started_at: new Date().toISOString(),
@@ -49,7 +50,7 @@ export async function updateRun(
     error_message?: string;
   }
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('runs')
     .update(update)
     .eq('run_id', runId);

@@ -14,7 +14,7 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // Skapa Supabase client med service role (full access)
-export const supabase = createClient<Database>(
+export const supabase: any = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   {
