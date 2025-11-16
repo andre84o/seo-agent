@@ -307,7 +307,7 @@ export function generateMetaDescriptionSuggestion(
       suggestedDesc = `${desc} Läs mer här!`;
     }
     suggestedDesc = suggestedDesc.substring(0, 160);
-    reason = `Meta description är för kort (${length} tecken). Utökad till 140-160 tecken med CTA.';
+    reason = `Meta description är för kort (${length} tecken). Utökad till 140-160 tecken med CTA.`;
     impact = 'medium';
     scoreImpact = 12;
   } else if (length > 160) {

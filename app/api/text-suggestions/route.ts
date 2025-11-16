@@ -5,7 +5,7 @@
 // DELETE: Ta bort förslag
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/db/supabase';
+import { supabase } from '@/lib/db/supabase';
 import { generateAllSuggestions, analyzePageContent } from '@/lib/seo/content-optimizer';
 import { fetchUrl } from '@/lib/mcp/fetch-url';
 
@@ -26,8 +26,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     // Bygg query
     let query = supabase
@@ -96,8 +94,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     // Kolla om det redan finns förslag
     if (!forceRegenerate) {
@@ -204,8 +200,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const supabase = createClient();
-
     const updates: any = {
       updated_at: new Date().toISOString()
     };
@@ -266,8 +260,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     let query = supabase.from('text_suggestions').delete();
 

@@ -3,7 +3,7 @@
 // POST: Generera nyckelordsanalys
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/db/supabase';
+import { supabase } from '@/lib/db/supabase';
 import { analyzeKeywords, extractKeywords, calculateKeywordDensity } from '@/lib/seo/content-optimizer';
 import { fetchUrl } from '@/lib/mcp/fetch-url';
 import * as cheerio from 'cheerio';
@@ -24,8 +24,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const supabase = createClient();
 
     let query = supabase
       .from('keywords')
@@ -118,8 +116,6 @@ export async function POST(request: NextRequest) {
     const analysis = analyzeKeywords(bodyText, keywords);
 
     // Spara i databasen
-    const supabase = createClient();
-
     const keywordsToInsert = analysis.map(k => ({
       url,
       keyword: k.keyword,
