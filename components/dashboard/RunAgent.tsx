@@ -160,7 +160,7 @@ export default function RunAgent({ onRunComplete }: RunAgentProps) {
                   <p>Duration: {result.duration.toFixed(1)}s</p>
                   {result.flaggedPages.length > 0 && (
                     <p className="text-orange-600 dark:text-orange-400">
-                      ⚠️ {result.flaggedPages.length} pages flagged for attention
+                      <i className="bi bi-exclamation-triangle-fill me-1"></i>{result.flaggedPages.length} pages flagged for attention
                     </p>
                   )}
                 </div>

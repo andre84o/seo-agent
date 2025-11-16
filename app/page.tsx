@@ -12,6 +12,7 @@ import ExportData from '@/components/dashboard/ExportData';
 import TextSuggestions from '@/components/dashboard/TextSuggestions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export default function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -49,10 +50,10 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="overview">📊 Score Overview</TabsTrigger>
-                <TabsTrigger value="suggestions">💡 Suggestions</TabsTrigger>
-                <TabsTrigger value="text-suggestions">✏️ Textförslag</TabsTrigger>
-                <TabsTrigger value="runs">🕐 Recent Runs</TabsTrigger>
+                <TabsTrigger value="overview"><i className="bi bi-bar-chart-fill me-2"></i>Score Overview</TabsTrigger>
+                <TabsTrigger value="suggestions"><i className="bi bi-lightbulb-fill me-2"></i>Suggestions</TabsTrigger>
+                <TabsTrigger value="text-suggestions"><i className="bi bi-pencil-fill me-2"></i>Textförslag</TabsTrigger>
+                <TabsTrigger value="runs"><i className="bi bi-clock-history me-2"></i>Recent Runs</TabsTrigger>
               </TabsList>
             </CardHeader>
             <CardContent>

@@ -5,6 +5,27 @@
 
 import { useState, useEffect } from 'react';
 import type { Database } from '@/lib/db/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sparkles,
+  Copy,
+  Check,
+  X,
+  Edit,
+  Save,
+  AlertCircle,
+  TrendingUp,
+  Hash
+} from 'lucide-react';
 
 type TextSuggestion = Database['public']['Tables']['text_suggestions']['Row'];
 type SectionType = TextSuggestion['section_type'];
@@ -28,19 +49,6 @@ const SECTION_META: Record<SectionType, { label: string; icon: string; descripti
   canonical: { label: 'Canonical URL', icon: '🔗', description: 'Kanonisk URL' }
 };
 
-const IMPACT_COLORS = {
-  high: 'bg-red-100 text-red-800 border-red-300',
-  medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  low: 'bg-blue-100 text-blue-800 border-blue-300'
-};
-
-const STATUS_COLORS = {
-  pending: 'bg-gray-100 text-gray-700',
-  edited: 'bg-purple-100 text-purple-700',
-  applied: 'bg-green-100 text-green-700',
-  dismissed: 'bg-gray-200 text-gray-500'
-};
-
 export default function TextSuggestions({ url }: TextSuggestionsProps) {
   const [selectedUrl, setSelectedUrl] = useState(url || '');
   const [suggestions, setSuggestions] = useState<TextSuggestion[]>([]);
@@ -50,6 +58,7 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedText, setEditedText] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'edited'>('pending');
+  const [copySuccess, setCopySuccess] = useState<number | null>(null);
 
   // Hämta förslag
   const fetchSuggestions = async () => {
@@ -100,7 +109,6 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
         throw new Error(data.error || 'Failed to generate suggestions');
       }
 
-      // Hämta uppdaterade förslag
       await fetchSuggestions();
     } catch (err) {
       setError((err as Error).message);
@@ -124,12 +132,10 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
         throw new Error(data.error || 'Failed to update suggestion');
       }
 
-      // Uppdatera lokalt state
       setSuggestions(prev =>
         prev.map(s => s.id === id ? data.suggestion : s)
       );
 
-      // Uppdatera grupperad data
       await fetchSuggestions();
     } catch (err) {
       setError((err as Error).message);
@@ -137,13 +143,35 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
   };
 
   // Kopiera text till clipboard
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, id: number) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert('Text kopierad till clipboard!');
+      setCopySuccess(id);
+      setTimeout(() => setCopySuccess(null), 2000);
     } catch (err) {
-      alert('Kunde inte kopiera text');
+      setError('Kunde inte kopiera text');
     }
+  };
+
+  const getImpactBadge = (impact: string) => {
+    const variants = {
+      high: { variant: 'destructive' as const, label: 'HIGH IMPACT' },
+      medium: { variant: 'default' as const, label: 'MEDIUM IMPACT' },
+      low: { variant: 'secondary' as const, label: 'LOW IMPACT' },
+    };
+    const config = variants[impact as keyof typeof variants];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      pending: { variant: 'outline' as const, label: 'PENDING', className: '' },
+      edited: { variant: 'default' as const, label: 'EDITED', className: 'bg-purple-600 hover:bg-purple-700' },
+      applied: { variant: 'default' as const, label: 'APPLIED', className: 'bg-green-600 hover:bg-green-700' },
+      dismissed: { variant: 'secondary' as const, label: 'DISMISSED', className: '' },
+    };
+    const config = variants[status as keyof typeof variants];
+    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
   };
 
   useEffect(() => {
@@ -155,74 +183,102 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
   return (
     <div className="space-y-6">
       {/* Header & Controls */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Textförslag & Optimering</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-6 w-6" />
+            Textförslag & Optimering
+          </CardTitle>
+          <CardDescription>
+            AI-genererade textförslag för att förbättra SEO
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* URL Input */}
+            <div className="space-y-2">
+              <Label htmlFor="url-input">URL att analysera</Label>
+              <Input
+                id="url-input"
+                type="url"
+                value={selectedUrl}
+                onChange={(e) => setSelectedUrl(e.target.value)}
+                placeholder="https://example.com/page"
+              />
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* URL Input */}
-          <div>
-            <label className="block text-sm font-medium mb-2">URL att analysera</label>
-            <input
-              type="url"
-              value={selectedUrl}
-              onChange={(e) => setSelectedUrl(e.target.value)}
-              placeholder="https://example.com/page"
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
+            {/* Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="filter-select">Filtrera förslag</Label>
+              <Select value={filter} onValueChange={(value) => setFilter(value as any)}>
+                <SelectTrigger id="filter-select">
+                  <SelectValue placeholder="Välj filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla förslag</SelectItem>
+                  <SelectItem value="pending">Väntande</SelectItem>
+                  <SelectItem value="edited">Redigerade</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Filter */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Filtrera förslag</label>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as any)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={fetchSuggestions}
+              disabled={!selectedUrl || loading}
+              variant="default"
             >
-              <option value="all">Alla förslag</option>
-              <option value="pending">Väntande</option>
-              <option value="edited">Redigerade</option>
-            </select>
+              <i className="bi bi-arrow-clockwise me-2"></i>
+              {loading ? 'Hämtar...' : 'Hämta förslag'}
+            </Button>
+
+            <Button
+              onClick={generateSuggestions}
+              disabled={!selectedUrl || loading}
+              variant="default"
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {loading ? 'Genererar...' : 'Generera nya förslag'}
+            </Button>
           </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="space-y-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 mt-4">
-          <button
-            onClick={fetchSuggestions}
-            disabled={!selectedUrl || loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Hämtar...' : 'Hämta förslag'}
-          </button>
-
-          <button
-            onClick={generateSuggestions}
-            disabled={!selectedUrl || loading}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Genererar...' : 'Generera nya förslag'}
-          </button>
-        </div>
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Suggestions List */}
       {!loading && suggestions.length > 0 && (
         <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold mb-2">
-              {suggestions.length} förslag funna
-            </h3>
-            <p className="text-sm text-gray-600">
-              Klicka på "Redigera" för att ändra texten, eller "Tillämpa" för att markera som klar.
-            </p>
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <h3 className="text-lg font-semibold">
+                  {suggestions.length} förslag funna
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Klicka på "Redigera" för att ändra texten, eller "Tillämpa" för att markera som klar.
+              </p>
+            </CardContent>
+          </Card>
 
           {/* Grupperade förslag per sektion */}
           {Object.entries(grouped).map(([sectionType, sectionSuggestions]) => {
@@ -230,183 +286,206 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
             if (!meta || sectionSuggestions.length === 0) return null;
 
             return (
-              <div key={sectionType} className="bg-white rounded-lg shadow overflow-hidden">
+              <Card key={sectionType}>
                 {/* Section Header */}
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{meta.icon}</span>
-                    <div>
-                      <h3 className="text-lg font-semibold">{meta.label}</h3>
-                      <p className="text-sm text-gray-600">{meta.description}</p>
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{meta.icon}</span>
+                      <div>
+                        <CardTitle className="text-lg">{meta.label}</CardTitle>
+                        <CardDescription>{meta.description}</CardDescription>
+                      </div>
                     </div>
-                    <span className="ml-auto bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    <Badge variant="default" className="bg-blue-600">
                       {sectionSuggestions.length} förslag
-                    </span>
+                    </Badge>
                   </div>
-                </div>
+                </CardHeader>
 
                 {/* Suggestions */}
-                <div className="divide-y">
-                  {sectionSuggestions.map((suggestion) => {
-                    const isEditing = editingId === suggestion.id;
-                    const displayText = suggestion.edited_text || suggestion.suggested_text;
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    {sectionSuggestions.map((suggestion) => {
+                      const isEditing = editingId === suggestion.id;
+                      const displayText = suggestion.edited_text || suggestion.suggested_text;
 
-                    return (
-                      <div key={suggestion.id} className="p-6 hover:bg-gray-50">
-                        {/* Impact & Status Badges */}
-                        <div className="flex gap-2 mb-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${IMPACT_COLORS[suggestion.impact]}`}>
-                            {suggestion.impact.toUpperCase()} IMPACT
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[suggestion.status]}`}>
-                            {suggestion.status.toUpperCase()}
-                          </span>
-                          {suggestion.seo_score_impact && (
-                            <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
-                              +{suggestion.seo_score_impact} poäng
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Original Text */}
-                        {suggestion.original_text && (
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Nuvarande text:
-                            </label>
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-gray-700">
-                              {suggestion.original_text}
-                              <div className="text-xs text-gray-500 mt-1">
-                                {suggestion.original_text.length} tecken, {suggestion.original_text.split(' ').length} ord
-                              </div>
-                            </div>
+                      return (
+                        <div key={suggestion.id} className="p-6 hover:bg-muted/50 transition-colors">
+                          {/* Impact & Status Badges */}
+                          <div className="flex gap-2 mb-4">
+                            {getImpactBadge(suggestion.impact)}
+                            {getStatusBadge(suggestion.status)}
+                            {suggestion.seo_score_impact && (
+                              <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                                +{suggestion.seo_score_impact} poäng
+                              </Badge>
+                            )}
                           </div>
-                        )}
 
-                        {/* Suggested/Edited Text */}
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {suggestion.edited_text ? 'Din redigerade text:' : 'Föreslagen text:'}
-                          </label>
+                          {/* Original Text */}
+                          {suggestion.original_text && (
+                            <div className="mb-4">
+                              <Label className="mb-2 block">Nuvarande text:</Label>
+                              <Alert variant="destructive" className="bg-red-50 dark:bg-red-950">
+                                <AlertDescription>
+                                  {suggestion.original_text}
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {suggestion.original_text.length} tecken, {suggestion.original_text.split(' ').length} ord
+                                  </div>
+                                </AlertDescription>
+                              </Alert>
+                            </div>
+                          )}
 
-                          {isEditing ? (
-                            <textarea
-                              value={editedText}
-                              onChange={(e) => setEditedText(e.target.value)}
-                              className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-                              placeholder="Redigera texten här..."
-                            />
-                          ) : (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-gray-700">
-                              {displayText}
-                              <div className="text-xs text-gray-500 mt-1">
-                                {displayText.length} tecken, {displayText.split(' ').length} ord
-                                {suggestion.readability_score && (
-                                  <span className="ml-3">
-                                    • Läsbarhet: {suggestion.readability_score.toFixed(0)}/100
-                                  </span>
-                                )}
+                          {/* Suggested/Edited Text */}
+                          <div className="mb-4">
+                            <Label className="mb-2 block">
+                              {suggestion.edited_text ? 'Din redigerade text:' : 'Föreslagen text:'}
+                            </Label>
+
+                            {isEditing ? (
+                              <Textarea
+                                value={editedText}
+                                onChange={(e) => setEditedText(e.target.value)}
+                                className="min-h-[100px]"
+                                placeholder="Redigera texten här..."
+                              />
+                            ) : (
+                              <Alert className="bg-green-50 dark:bg-green-950 border-green-200">
+                                <AlertDescription>
+                                  {displayText}
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {displayText.length} tecken, {displayText.split(' ').length} ord
+                                    {suggestion.readability_score && (
+                                      <span className="ml-3">
+                                        • Läsbarhet: {suggestion.readability_score.toFixed(0)}/100
+                                      </span>
+                                    )}
+                                  </div>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
+
+                          {/* Reason */}
+                          <Alert className="mb-4 bg-blue-50 dark:bg-blue-950 border-l-4 border-blue-400">
+                            <AlertDescription>
+                              <span className="font-semibold">Varför:</span> {suggestion.reason}
+                            </AlertDescription>
+                          </Alert>
+
+                          {/* Keywords */}
+                          {suggestion.keywords && Array.isArray(suggestion.keywords) && suggestion.keywords.length > 0 && (
+                            <div className="mb-4">
+                              <Label className="mb-2 flex items-center gap-2">
+                                <Hash className="h-4 w-4" />
+                                Inkluderade nyckelord:
+                              </Label>
+                              <div className="flex flex-wrap gap-2">
+                                {suggestion.keywords.map((keyword: any, idx: number) => (
+                                  <Badge key={idx} variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                                    {String(keyword)}
+                                  </Badge>
+                                ))}
                               </div>
                             </div>
                           )}
-                        </div>
 
-                        {/* Reason */}
-                        <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-                          <p className="text-sm text-gray-700">
-                            <span className="font-semibold">Varför:</span> {suggestion.reason}
-                          </p>
-                        </div>
+                          <Separator className="my-4" />
 
-                        {/* Keywords */}
-                        {suggestion.keywords && Array.isArray(suggestion.keywords) && suggestion.keywords.length > 0 && (
-                          <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Inkluderade nyckelord:
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              {suggestion.keywords.map((keyword: any, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium"
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 flex-wrap">
+                            {isEditing ? (
+                              <>
+                                <Button
+                                  onClick={() => {
+                                    updateSuggestion(suggestion.id, { editedText });
+                                    setEditingId(null);
+                                  }}
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
                                 >
-                                  {String(keyword)}
-                                </span>
-                              ))}
-                            </div>
+                                  <Save className="h-4 w-4 mr-1" />
+                                  Spara redigering
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    setEditingId(null);
+                                    setEditedText('');
+                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Avbryt
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={() => {
+                                    setEditingId(suggestion.id);
+                                    setEditedText(displayText);
+                                  }}
+                                  disabled={suggestion.status === 'applied'}
+                                  size="sm"
+                                  variant="default"
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Redigera
+                                </Button>
+                                <Button
+                                  onClick={() => copyToClipboard(displayText, suggestion.id)}
+                                  size="sm"
+                                  variant="secondary"
+                                >
+                                  {copySuccess === suggestion.id ? (
+                                    <>
+                                      <Check className="h-4 w-4 mr-1" />
+                                      Kopierad!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="h-4 w-4 mr-1" />
+                                      Kopiera
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  onClick={() => updateSuggestion(suggestion.id, { status: 'applied' })}
+                                  disabled={suggestion.status === 'applied'}
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Tillämpa
+                                </Button>
+                                <Button
+                                  onClick={() => updateSuggestion(suggestion.id, { status: 'dismissed' })}
+                                  disabled={suggestion.status === 'dismissed'}
+                                  size="sm"
+                                  variant="destructive"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Avfärda
+                                </Button>
+                              </>
+                            )}
                           </div>
-                        )}
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 flex-wrap">
-                          {isEditing ? (
-                            <>
-                              <button
-                                onClick={() => {
-                                  updateSuggestion(suggestion.id, { editedText });
-                                  setEditingId(null);
-                                }}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                              >
-                                Spara redigering
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingId(null);
-                                  setEditedText('');
-                                }}
-                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm"
-                              >
-                                Avbryt
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setEditingId(suggestion.id);
-                                  setEditedText(displayText);
-                                }}
-                                disabled={suggestion.status === 'applied'}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 text-sm"
-                              >
-                                ✏️ Redigera
-                              </button>
-                              <button
-                                onClick={() => copyToClipboard(displayText)}
-                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
-                              >
-                                📋 Kopiera
-                              </button>
-                              <button
-                                onClick={() => updateSuggestion(suggestion.id, { status: 'applied' })}
-                                disabled={suggestion.status === 'applied'}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 text-sm"
-                              >
-                                ✓ Tillämpa
-                              </button>
-                              <button
-                                onClick={() => updateSuggestion(suggestion.id, { status: 'dismissed' })}
-                                disabled={suggestion.status === 'dismissed'}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-300 text-sm"
-                              >
-                                ✗ Avfärda
-                              </button>
-                            </>
+                          {/* Applied timestamp */}
+                          {suggestion.applied_at && (
+                            <div className="mt-3 text-xs text-muted-foreground">
+                              Tillämpades: {new Date(suggestion.applied_at).toLocaleString('sv-SE')}
+                            </div>
                           )}
                         </div>
-
-                        {/* Applied timestamp */}
-                        {suggestion.applied_at && (
-                          <div className="mt-3 text-xs text-gray-500">
-                            Tillämpades: {new Date(suggestion.applied_at).toLocaleString('sv-SE')}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
@@ -414,13 +493,15 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
 
       {/* Empty State */}
       {!loading && suggestions.length === 0 && selectedUrl && (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <div className="text-6xl mb-4">💡</div>
-          <h3 className="text-xl font-semibold mb-2">Inga förslag än</h3>
-          <p className="text-gray-600 mb-6">
-            Generera textförslag för denna sida genom att klicka på knappen ovan.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <i className="bi bi-lightbulb text-6xl text-muted-foreground mb-4 d-block"></i>
+            <h3 className="text-xl font-semibold mb-2">Inga förslag än</h3>
+            <p className="text-muted-foreground mb-6">
+              Generera textförslag för denna sida genom att klicka på knappen ovan.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

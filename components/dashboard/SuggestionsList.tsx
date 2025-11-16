@@ -4,6 +4,13 @@
 // Visar topp förslag filtrerade på impact och status
 
 import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { AlertTriangle, TrendingUp, TrendingDown, ExternalLink, Play, CheckCircle, X } from 'lucide-react';
 
 interface Suggestion {
   suggestion_id: number;
@@ -60,7 +67,6 @@ export default function SuggestionsList() {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh lista
         fetchSuggestions();
       }
     } catch (error) {
@@ -69,48 +75,52 @@ export default function SuggestionsList() {
   };
 
   const getImpactBadge = (impact: string) => {
-    const colors = {
-      high: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-      medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      low: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    const variants = {
+      high: { variant: 'destructive' as const, icon: AlertTriangle },
+      medium: { variant: 'default' as const, icon: TrendingUp },
+      low: { variant: 'secondary' as const, icon: TrendingDown },
     };
 
+    const config = variants[impact as keyof typeof variants];
+    const Icon = config.icon;
+
     return (
-      <span
-        className={`px-2 py-1 rounded text-xs font-medium ${colors[impact as keyof typeof colors]}`}
-      >
+      <Badge variant={config.variant} className="gap-1">
+        <Icon className="h-3 w-3" />
         {impact.toUpperCase()}
-      </span>
+      </Badge>
     );
   };
 
   const getStatusBadge = (status: string) => {
-    const colors = {
-      pending: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-      in_progress: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-      dismissed: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+    const variants = {
+      pending: 'outline' as const,
+      in_progress: 'default' as const,
+      completed: 'default' as const,
+      dismissed: 'secondary' as const,
     };
 
     return (
-      <span
-        className={`px-2 py-1 rounded text-xs font-medium ${colors[status as keyof typeof colors]}`}
-      >
+      <Badge variant={variants[status as keyof typeof variants]}>
         {status.replace('_', ' ').toUpperCase()}
-      </span>
+      </Badge>
     );
   };
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-        <p className="text-gray-600 dark:text-gray-400 mt-4">Loading suggestions...</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
-  // Gruppera suggestions per URL och impact
   const suggestionsByImpact = {
     high: suggestions.filter(s => s.impact === 'high'),
     medium: suggestions.filter(s => s.impact === 'medium'),
@@ -121,136 +131,153 @@ export default function SuggestionsList() {
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-4 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400 font-medium">High Impact</p>
-          <p className="text-3xl font-bold text-red-900 dark:text-red-100">
-            {suggestionsByImpact.high.length}
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>High Impact</CardDescription>
+            <CardTitle className="text-4xl flex items-center gap-2">
+              <AlertTriangle className="h-8 w-8 text-red-600" />
+              {suggestionsByImpact.high.length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-4 rounded-lg">
-          <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
-            Medium Impact
-          </p>
-          <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
-            {suggestionsByImpact.medium.length}
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Medium Impact</CardDescription>
+            <CardTitle className="text-4xl flex items-center gap-2">
+              <TrendingUp className="h-8 w-8 text-yellow-600" />
+              {suggestionsByImpact.medium.length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
-          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Low Impact</p>
-          <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-            {suggestionsByImpact.low.length}
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Low Impact</CardDescription>
+            <CardTitle className="text-4xl flex items-center gap-2">
+              <TrendingDown className="h-8 w-8 text-blue-600" />
+              {suggestionsByImpact.low.length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 p-4 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Total</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {suggestions.length}
-          </p>
-        </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Total</CardDescription>
+            <CardTitle className="text-4xl">
+              {suggestions.length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Impact
-          </label>
-          <select
-            value={impactFilter}
-            onChange={(e) => setImpactFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="all">All Impacts</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+        <div className="space-y-2">
+          <Label htmlFor="impact-filter">Impact</Label>
+          <Select value={impactFilter} onValueChange={setImpactFilter}>
+            <SelectTrigger id="impact-filter" className="w-[180px]">
+              <SelectValue placeholder="Select impact" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Impacts</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Status
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="dismissed">Dismissed</option>
-          </select>
+        <div className="space-y-2">
+          <Label htmlFor="status-filter">Status</Label>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger id="status-filter" className="w-[180px]">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="dismissed">Dismissed</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {/* Suggestions List */}
       <div className="space-y-4">
-        {suggestions.map((suggestion) => (
-          <div
-            key={suggestion.suggestion_id}
-            className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                {getImpactBadge(suggestion.impact)}
-                {getStatusBadge(suggestion.status)}
-              </div>
-              <div className="flex gap-2">
-                {suggestion.status === 'pending' && (
-                  <button
-                    onClick={() => updateStatus(suggestion.suggestion_id, 'in_progress')}
-                    className="text-xs px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
-                  >
-                    Start
-                  </button>
-                )}
-                {suggestion.status === 'in_progress' && (
-                  <button
-                    onClick={() => updateStatus(suggestion.suggestion_id, 'completed')}
-                    className="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
-                  >
-                    Complete
-                  </button>
-                )}
-                {suggestion.status !== 'dismissed' && (
-                  <button
-                    onClick={() => updateStatus(suggestion.suggestion_id, 'dismissed')}
-                    className="text-xs px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                )}
-              </div>
-            </div>
+        {suggestions.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12 text-muted-foreground">
+              No suggestions found. Run the agent to generate suggestions.
+            </CardContent>
+          </Card>
+        ) : (
+          suggestions.map((suggestion) => (
+            <Card key={suggestion.suggestion_id}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    {getImpactBadge(suggestion.impact)}
+                    {getStatusBadge(suggestion.status)}
+                  </div>
+                  <div className="flex gap-2">
+                    {suggestion.status === 'pending' && (
+                      <Button
+                        onClick={() => updateStatus(suggestion.suggestion_id, 'in_progress')}
+                        size="sm"
+                        variant="default"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start
+                      </Button>
+                    )}
+                    {suggestion.status === 'in_progress' && (
+                      <Button
+                        onClick={() => updateStatus(suggestion.suggestion_id, 'completed')}
+                        size="sm"
+                        variant="default"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Complete
+                      </Button>
+                    )}
+                    {suggestion.status !== 'dismissed' && (
+                      <Button
+                        onClick={() => updateStatus(suggestion.suggestion_id, 'dismissed')}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Dismiss
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-3">
+                  {suggestion.action}
+                </p>
 
-            <p className="text-sm text-gray-900 dark:text-gray-100 mb-2">
-              {suggestion.action}
-            </p>
+                <a
+                  href={suggestion.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                >
+                  {suggestion.url}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
 
-            <a
-              href={suggestion.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              {suggestion.url}
-            </a>
-
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Created: {new Date(suggestion.created_at).toLocaleString()}
-            </p>
-          </div>
-        ))}
-
-        {suggestions.length === 0 && (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            No suggestions found. Run the agent to generate suggestions.
-          </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Created: {new Date(suggestion.created_at).toLocaleString()}
+                </p>
+              </CardContent>
+            </Card>
+          ))
         )}
       </div>
     </div>
