@@ -325,12 +325,12 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
                               Inkluderade nyckelord:
                             </label>
                             <div className="flex flex-wrap gap-2">
-                              {suggestion.keywords.map((keyword: string, idx: number) => (
+                              {suggestion.keywords.map((keyword: any, idx: number) => (
                                 <span
                                   key={idx}
                                   className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium"
                                 >
-                                  {keyword}
+                                  {String(keyword)}
                                 </span>
                               ))}
                             </div>

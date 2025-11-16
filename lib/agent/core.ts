@@ -68,21 +68,27 @@ export async function runAgent(config: AgentConfig): Promise<AgentRunResult> {
       ? await readSitemap(config.sitemapUrl)
       : await discoverSitemap(config.siteUrl);
 
+    let urlsToProcess: string[] = [];
+
     if (!sitemapResult.success || sitemapResult.totalUrls === 0) {
-      throw new Error(`Failed to fetch sitemap: ${sitemapResult.error}`);
+      // Sitemap hittades inte - använd bara siteUrl
+      console.warn(`[Agent] ⚠️ Sitemap not found: ${sitemapResult.error}`);
+      console.log('[Agent] Falling back to checking only the site URL');
+      urlsToProcess = [config.siteUrl];
+    } else {
+      console.log(`[Agent] Found ${sitemapResult.totalUrls} URLs in sitemap`);
+      urlsToProcess = sitemapResult.urls.map(u => u.loc);
     }
 
-    console.log(`[Agent] Found ${sitemapResult.totalUrls} URLs in sitemap`);
-
-    // Steg 2: Upsertera alla pages från sitemap
-    for (const sitemapUrl of sitemapResult.urls) {
+    // Steg 2: Upsertera alla pages från sitemap eller bara siteUrl
+    for (const url of urlsToProcess) {
       try {
         await upsertPage({
-          url: sitemapUrl.loc,
+          url: url,
           last_seen_at: new Date().toISOString(),
         });
       } catch (error) {
-        console.error(`Error upserting page ${sitemapUrl.loc}:`, error);
+        console.error(`Error upserting page ${url}:`, error);
       }
     }
 

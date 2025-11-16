@@ -4,6 +4,12 @@
 // Tillåter användaren att starta en audit-körning
 
 import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, PlayCircle, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface RunAgentProps {
   onRunComplete: () => void;
@@ -57,97 +63,112 @@ export default function RunAgent({ onRunComplete }: RunAgentProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-        Run SEO Agent
-      </h2>
-
-      <div className="space-y-4">
-        {/* Site URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Site URL *
-          </label>
-          <input
-            type="url"
-            value={siteUrl}
-            onChange={(e) => setSiteUrl(e.target.value)}
-            placeholder="https://example.com"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            disabled={isRunning}
-          />
-        </div>
-
-        {/* Sitemap URL (optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Sitemap URL (optional)
-          </label>
-          <input
-            type="url"
-            value={sitemapUrl}
-            onChange={(e) => setSitemapUrl(e.target.value)}
-            placeholder="https://example.com/sitemap.xml"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            disabled={isRunning}
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Leave empty to auto-discover from robots.txt
-          </p>
-        </div>
-
-        {/* Max Pages */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Max Pages to Check
-          </label>
-          <input
-            type="number"
-            value={maxPages}
-            onChange={(e) => setMaxPages(parseInt(e.target.value))}
-            min="1"
-            max="100"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            disabled={isRunning}
-          />
-        </div>
-
-        {/* Run Button */}
-        <button
-          onClick={handleRun}
-          disabled={isRunning}
-          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
-        >
-          {isRunning ? 'Running Agent...' : 'Run Agent'}
-        </button>
-
-        {/* Error */}
-        {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <PlayCircle className="h-6 w-6" />
+          Run SEO Agent
+        </CardTitle>
+        <CardDescription>
+          Start a manual SEO audit of your website
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Site URL */}
+          <div className="space-y-2">
+            <Label htmlFor="site-url">Site URL *</Label>
+            <Input
+              id="site-url"
+              type="url"
+              value={siteUrl}
+              onChange={(e) => setSiteUrl(e.target.value)}
+              placeholder="https://example.com"
+              disabled={isRunning}
+            />
           </div>
-        )}
 
-        {/* Result */}
-        {result && (
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
-              ✅ Run Completed Successfully
-            </h3>
-            <div className="text-sm text-green-800 dark:text-green-200 space-y-1">
-              <p>Run ID: {result.runId}</p>
-              <p>Pages Checked: {result.pagesChecked}</p>
-              <p>Average Score: {result.avgScore.toFixed(1)}/100</p>
-              <p>Duration: {result.duration.toFixed(1)}s</p>
-              {result.flaggedPages.length > 0 && (
-                <p className="text-orange-600 dark:text-orange-400">
-                  ⚠️ {result.flaggedPages.length} pages flagged for attention
-                </p>
-              )}
-            </div>
+          {/* Sitemap URL (optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="sitemap-url">Sitemap URL (optional)</Label>
+            <Input
+              id="sitemap-url"
+              type="url"
+              value={sitemapUrl}
+              onChange={(e) => setSitemapUrl(e.target.value)}
+              placeholder="https://example.com/sitemap.xml"
+              disabled={isRunning}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty to auto-discover from robots.txt
+            </p>
           </div>
-        )}
-      </div>
-    </div>
+
+          {/* Max Pages */}
+          <div className="space-y-2">
+            <Label htmlFor="max-pages">Max Pages to Check</Label>
+            <Input
+              id="max-pages"
+              type="number"
+              value={maxPages}
+              onChange={(e) => setMaxPages(parseInt(e.target.value))}
+              min="1"
+              max="100"
+              disabled={isRunning}
+            />
+          </div>
+
+          {/* Run Button */}
+          <Button
+            onClick={handleRun}
+            disabled={isRunning}
+            className="w-full"
+            size="lg"
+          >
+            {isRunning ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Running Agent...
+              </>
+            ) : (
+              <>
+                <PlayCircle className="mr-2 h-4 w-4" />
+                Run Agent
+              </>
+            )}
+          </Button>
+
+          {/* Error */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Result */}
+          {result && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Run Completed Successfully</AlertTitle>
+              <AlertDescription>
+                <div className="mt-2 space-y-1 text-sm">
+                  <p>Run ID: {result.runId}</p>
+                  <p>Pages Checked: {result.pagesChecked}</p>
+                  <p>Average Score: {result.avgScore.toFixed(1)}/100</p>
+                  <p>Duration: {result.duration.toFixed(1)}s</p>
+                  {result.flaggedPages.length > 0 && (
+                    <p className="text-orange-600 dark:text-orange-400">
+                      ⚠️ {result.flaggedPages.length} pages flagged for attention
+                    </p>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

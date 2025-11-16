@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       under_used: []
     };
 
-    data?.forEach(keyword => {
+    data?.forEach((keyword: any) => {
       groupedByStatus[keyword.status].push(keyword);
     });
 
@@ -97,8 +97,16 @@ export async function POST(request: NextRequest) {
 
     // Hämta HTML
     console.log(`Fetching HTML for ${url}...`);
-    const html = await fetchUrl(url);
-    const $ = cheerio.load(html);
+    const fetchResult = await fetchUrl({ url });
+    
+    if (!fetchResult.success || !fetchResult.html) {
+      return NextResponse.json(
+        { error: fetchResult.error || 'Failed to fetch HTML' },
+        { status: 500 }
+      );
+    }
+    
+    const $ = cheerio.load(fetchResult.html);
 
     // Ta bort script och style
     $('script, style, noscript').remove();

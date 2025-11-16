@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Gruppera per sektion
     const groupedBySection: Record<string, any[]> = {};
-    data?.forEach(suggestion => {
+    data?.forEach((suggestion: any) => {
       if (!groupedBySection[suggestion.section_type]) {
         groupedBySection[suggestion.section_type] = [];
       }
@@ -114,15 +114,22 @@ export async function POST(request: NextRequest) {
 
     // Hämta HTML från sidan
     console.log(`Fetching HTML for ${url}...`);
-    const html = await fetchUrl(url);
+    const fetchResult = await fetchUrl({ url });
+    
+    if (!fetchResult.success || !fetchResult.html) {
+      return NextResponse.json(
+        { error: fetchResult.error || 'Failed to fetch HTML' },
+        { status: 500 }
+      );
+    }
 
     // Generera förslag
     console.log('Generating text suggestions...');
-    const suggestions = await generateAllSuggestions(html, url, keywords || []);
+    const suggestions = await generateAllSuggestions(fetchResult.html, url, keywords || []);
 
     // Analysera innehåll
     console.log('Analyzing content...');
-    const contentAnalysis = await analyzePageContent(html, url);
+    const contentAnalysis = await analyzePageContent(fetchResult.html, url);
 
     // Spara förslag i databasen
     const suggestionsToInsert = suggestions.map(s => ({
@@ -159,9 +166,9 @@ export async function POST(request: NextRequest) {
     const { error: analysisError } = await supabase
       .from('content_analysis')
       .insert({
-        url,
         run_id: runId || null,
-        ...contentAnalysis
+        ...contentAnalysis,
+        url // Moved to end to prevent overwriting
       });
 
     if (analysisError) {
