@@ -4,12 +4,62 @@ Komplett guide för att installera SEO Agent i nya Next.js-projekt.
 
 ## 📋 Innehållsförteckning
 
-1. [Krav](#krav)
-2. [Installation](#installation)
-3. [Databaskonfiguration](#databaskonfiguration)
-4. [Miljövariabler](#miljövariabler)
-5. [Körning](#körning)
-6. [Användning](#användning)
+1. [Snabbstart](#snabbstart)
+2. [Krav](#krav)
+3. [Installation](#installation)
+4. [Databaskonfiguration](#databaskonfiguration)
+5. [Miljövariabler](#miljövariabler)
+6. [Körning](#körning)
+7. [Användning](#användning)
+
+---
+
+## ⚡ Snabbstart
+
+**Snabb installation med minimal konfiguration.**
+
+### Kortversion för erfarna användare:
+
+1. **Klona & installera**
+   ```bash
+   git clone <repo-url> && cd seo-agent && npm install
+   ```
+
+2. **Supabase setup**
+   - Skapa Supabase-projekt
+   - Kör alla 4 migrations i SQL Editor
+   - Kopiera Supabase URL och keys
+
+3. **Konfigurera .env.local**
+   ```bash
+   # Supabase (OBLIGATORISKT)
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+   SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+   # Google PageSpeed Insights (OBLIGATORISKT)
+   PSI_API_KEY=din-api-nyckel-här
+
+   # Webbplats (kan konfigureras i UI istället)
+   SITE_URL=https://example.com
+   SITEMAP_URL=https://example.com/sitemap.xml
+   MAX_PAGES_PER_RUN=20
+
+   # Google Search Console (Valfritt)
+   GSC_ACCESS_TOKEN=din-token-här
+   GSC_SITE_URL=https://example.com
+   ```
+
+4. **Starta & konfigurera**
+   ```bash
+   npm run dev
+   ```
+   Gå till `http://localhost:3000` → **Settings-fliken** → Konfigurera resten:
+   - Lägg till dina sidor
+   - Lägg till keywords
+   - Klicka "Run Agent" för att analysera!
+
+**Säkerhet först: API-nycklar lagras säkert i .env.local, icke-känsliga inställningar i UI:et.** 🔒
 
 ---
 
@@ -90,11 +140,12 @@ I Supabase Dashboard:
 
 ### Steg 3: Kör migrations
 
-Det finns tre migrationsfiler i `supabase/migrations/`:
+Det finns fyra migrationsfiler i `supabase/migrations/`:
 
 1. `20250111000000_initial_schema.sql` - Grundschema
 2. `20250111000001_retention_and_cleanup.sql` - Data retention
-3. `20250114000000_text_suggestions.sql` - Textförslag (nytt!)
+3. `20250114000000_text_suggestions.sql` - Textförslag
+4. `20250116000000_settings_table.sql` - Settings-tabell för UI-konfiguration (nytt!)
 
 #### Alternativ A: Använd Supabase CLI (rekommenderat)
 
@@ -119,6 +170,7 @@ supabase db push
 3. Klistra in och kör (Run)
 4. Upprepa för `20250111000001_retention_and_cleanup.sql`
 5. Upprepa för `20250114000000_text_suggestions.sql`
+6. Upprepa för `20250116000000_settings_table.sql`
 
 ### Steg 4: Verifiera tabeller
 
@@ -129,36 +181,44 @@ Gå till **Table Editor** och kontrollera att följande tabeller finns:
 - ✅ `suggestions`
 - ✅ `gsc_daily`
 - ✅ `weekly_summaries`
-- ✅ `text_suggestions` (nytt!)
-- ✅ `keywords` (nytt!)
-- ✅ `content_analysis` (nytt!)
+- ✅ `text_suggestions`
+- ✅ `keywords`
+- ✅ `content_analysis`
+- ✅ `settings` (nytt!)
 
 ---
 
 ## 🔐 Miljövariabler
 
-### Skapa .env.local-fil
+### Säkerhet först: API-nycklar i .env.local
 
-I projektets root, skapa filen `.env.local`:
+**Av säkerhetsskäl lagras alla API-nycklar i `.env.local` på servern, INTE i databasen.**
+
+Skapa filen `.env.local` i projektets root med följande innehåll:
 
 ```bash
-# Supabase
+# ============================================================================
+# SUPABASE (OBLIGATORISKT)
+# ============================================================================
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# PageSpeed Insights
+# ============================================================================
+# GOOGLE PAGESPEED INSIGHTS (OBLIGATORISKT)
+# ============================================================================
 PSI_API_KEY=AIzaSy...
 
-# Site Configuration (för cron jobs)
+# ============================================================================
+# WEBBPLATS-KONFIGURATION (Kan konfigureras i Settings UI istället)
+# ============================================================================
 SITE_URL=https://dinwebbplats.se
 SITEMAP_URL=https://dinwebbplats.se/sitemap.xml
 MAX_PAGES_PER_RUN=20
 
-# Vercel Cron (production only)
-CRON_SECRET=din-hemliga-nyckel-här
-
-# Google Search Console (valfritt)
+# ============================================================================
+# GOOGLE SEARCH CONSOLE (Valfritt)
+# ============================================================================
 GSC_ACCESS_TOKEN=ya29...
 GSC_SITE_URL=https://dinwebbplats.se
 GSC_CLIENT_ID=xxx.apps.googleusercontent.com
@@ -166,19 +226,39 @@ GSC_CLIENT_SECRET=xxx
 GSC_REFRESH_TOKEN=xxx
 ```
 
+### Vad konfigureras var?
+
+| Inställning | Var | Säkerhetsskäl |
+|------------|-----|---------------|
+| **Supabase credentials** | `.env.local` | Känslig - servercredentials |
+| **PSI API-nyckel** | `.env.local` | Känslig - API-nyckel |
+| **GSC credentials** | `.env.local` | Känslig - OAuth tokens |
+| **Site URL** | `.env.local` eller Settings UI | Icke-känslig |
+| **Sitemap URL** | `.env.local` eller Settings UI | Icke-känslig |
+| **Max pages per run** | `.env.local` eller Settings UI | Icke-känslig |
+| **Sidor att övervaka** | Settings UI | Icke-känslig |
+| **Keywords** | Settings UI | Icke-känslig |
+
+**Prioritet:** `.env.local` → Settings-tabellen → Default-värden
+
 ### Beskrivning av variabler
 
 | Variabel | Typ | Beskrivning |
 |----------|-----|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Krävs | Din Supabase projekt-URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Krävs | Supabase anon public key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Krävs | Supabase service role key (hemlig!) |
-| `PSI_API_KEY` | Krävs | Google PageSpeed Insights API-nyckel |
-| `SITE_URL` | Krävs | Webbplatsen som ska analyseras |
-| `SITEMAP_URL` | Valfri | Sitemap URL (auto-upptäcks om tom) |
-| `MAX_PAGES_PER_RUN` | Valfri | Max sidor per körning (default: 20) |
-| `CRON_SECRET` | Valfri | Hemlig nyckel för cron-autentisering |
-| `GSC_*` | Valfri | Google Search Console credentials |
+| `NEXT_PUBLIC_SUPABASE_URL` | **Krävs** | Din Supabase projekt-URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Krävs** | Supabase anon public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Krävs** | Supabase service role key (hemlig!) |
+| `PSI_API_KEY` | **Krävs** | Google PageSpeed Insights API-nyckel |
+| `SITE_URL` | Valfri* | Webbplatsen som ska analyseras |
+| `SITEMAP_URL` | Valfri* | Sitemap URL (auto-upptäcks om tom) |
+| `MAX_PAGES_PER_RUN` | Valfri* | Max sidor per körning (default: 20) |
+| `GSC_ACCESS_TOKEN` | Valfri | Google Search Console access token |
+| `GSC_SITE_URL` | Valfri | Google Search Console site URL |
+| `GSC_CLIENT_ID` | Valfri | Google OAuth Client ID |
+| `GSC_CLIENT_SECRET` | Valfri | Google OAuth Client Secret |
+| `GSC_REFRESH_TOKEN` | Valfri | Google OAuth Refresh Token |
+
+**\* Kan också konfigureras i Settings UI**
 
 ### Hämta PageSpeed Insights API-nyckel
 
@@ -188,7 +268,9 @@ GSC_REFRESH_TOKEN=xxx
 4. Sök efter "PageSpeed Insights API"
 5. Klicka **Enable**
 6. Gå till **Credentials** > **Create Credentials** > **API Key**
-7. Kopiera API-nyckeln till `.env.local`
+7. Kopiera API-nyckeln och lägg till den i `.env.local` som `PSI_API_KEY`
+
+**Säkerhetsnotering:** API-nycklar ska ENDAST lagras i `.env.local` och ALDRIG i Settings UI eller databasen.
 
 ---
 
@@ -208,12 +290,32 @@ npm run dev
 
 1. Pusha kod till GitHub
 2. Importera projekt i Vercel
-3. Lägg till environment variables i Vercel Dashboard
+3. Lägg till **alla nödvändiga** environment variables i Vercel Dashboard:
+
+   **Obligatoriska:**
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `PSI_API_KEY`
+
+   **Valfria (kan konfigureras i Settings UI istället):**
+   - `SITE_URL`
+   - `SITEMAP_URL`
+   - `MAX_PAGES_PER_RUN`
+
+   **Valfria (Google Search Console):**
+   - `GSC_ACCESS_TOKEN`
+   - `GSC_SITE_URL`
+   - `GSC_CLIENT_ID`
+   - `GSC_CLIENT_SECRET`
+   - `GSC_REFRESH_TOKEN`
+
 4. Deploy!
+5. Konfigurera icke-känsliga inställningar i **Settings-fliken** i dashboarden
 
 ### Kör migrations i production
 
-Efter första deploy, kör migrations i Supabase Dashboard SQL Editor.
+Efter första deploy, kör alla migrations (inkl. settings) i Supabase Dashboard SQL Editor.
 
 ---
 
@@ -221,12 +323,13 @@ Efter första deploy, kör migrations i Supabase Dashboard SQL Editor.
 
 ### Dashboard
 
-Öppna `http://localhost:3000` för att se dashboarden med 4 flikar:
+Öppna `http://localhost:3000` för att se dashboarden med 5 flikar:
 
 1. **📊 Score Overview** - Senaste SEO-scores och Core Web Vitals
 2. **💡 Suggestions** - Automatiskt genererade förbättringsförslag
 3. **✏️ Textförslag** - AI-drivna textförbättringar med klick-för-att-kopiera
-4. **🕐 Recent Runs** - Historik över agenten körningar
+4. **🕐 Recent Runs** - Historik över agentens körningar
+5. **⚙️ Settings** - Konfigurera API-nycklar, sidor och nyckelord (nytt!)
 
 ### Textförslag - Nytt!
 
@@ -263,20 +366,100 @@ Den nya "Textförslag"-fliken ger dig:
 - **Föreslagen**: "Upptäck professionell SEO optimering och expert rådgivning för din webbplats. Öka din synlighet i Google. Läs mer här!"
 - **Varför**: Meta description saknar nyckelord och CTA
 
+### Settings-flik
+
+Settings-fliken ger dig kontroll över icke-känsliga systemkonfigurationer:
+
+#### API-nycklar (Konfigureras i .env.local)
+Settings UI visar vilka API-nycklar som behövs, men dessa måste konfigureras i `.env.local` av säkerhetsskäl:
+- **PSI_API_KEY** - Google PageSpeed Insights (obligatorisk)
+- **GSC_ACCESS_TOKEN** - Google Search Console (valfritt)
+- Och övriga GSC OAuth-credentials
+
+#### Webbplatsinställningar (Kan konfigureras här!)
+- **Site URL** - Din huvudwebbplats
+- **Sitemap URL** - Valfritt (lämna tom för auto-upptäckt)
+- **Max sidor per run** - Begränsa antal sidor per analys
+- **GSC Site URL** - För Google Search Console-integration
+
+#### Hantera nyckelord
+Lägg till nyckelord manuellt för att:
+- Spåra viktiga keywords per sida
+- Sätta mål-densitet för keywords
+- Få nyckelordsförslag i textanalys
+
+#### Hantera sidor
+Lägg till specifika sidor att övervaka:
+- Se senaste SEO-score per sida
+- Spåra när sidan senast analyserades
+- Ta bort sidor från övervakning
+
 ### Manuell körning
 
 Klicka "Run Agent" i dashboarden och fyll i:
-- **Site URL**: Webbplats att analysera
+- **Site URL**: Webbplats att analysera (eller använd standardvärde från Settings)
 - **Sitemap URL**: (valfri) Om du har custom sitemap
-- **Max Pages**: Antal sidor att kontrollera (default: 20)
-
-### Automatisk körning (Cron)
-
-Agenten körs automatiskt varje natt kl 02:00 UTC om du deployer till Vercel.
-
-Se `vercel.json` för cron-konfiguration.
+- **Max Pages**: Antal sidor att kontrollera (eller använd standardvärde från Settings)
 
 ### API Endpoints
+
+#### Settings API
+
+```bash
+# Hämta alla inställningar
+GET /api/settings
+
+# Uppdatera en inställning
+POST /api/settings
+{
+  "setting_key": "psi_api_key",
+  "setting_value": "AIzaSy..."
+}
+```
+
+#### Pages API (Nytt!)
+
+```bash
+# Hämta alla övervakade sidor
+GET /api/pages
+
+# Lägg till ny sida
+PUT /api/pages
+{
+  "url": "https://example.com/page"
+}
+
+# Ta bort sida
+DELETE /api/pages?url=https://example.com/page
+```
+
+#### Keywords API (Uppdaterad!)
+
+```bash
+# Hämta nyckelord för en sida
+GET /api/keywords?url=https://example.com/page
+
+# Hämta alla nyckelord
+GET /api/keywords?url=all
+
+# Lägg till/uppdatera keyword manuellt (Nytt!)
+PUT /api/keywords
+{
+  "keyword": "seo optimering",
+  "url": "https://example.com/page",
+  "target_density": 2.5
+}
+
+# Ta bort keyword (Nytt!)
+DELETE /api/keywords?id=123
+
+# Generera nyckelordsanalys (från innehåll)
+POST /api/keywords
+{
+  "url": "https://example.com/page",
+  "targetKeywords": ["keyword1", "keyword2"]
+}
+```
 
 #### Textförslag API
 
@@ -301,20 +484,6 @@ PATCH /api/text-suggestions
 }
 ```
 
-#### Nyckelords API
-
-```bash
-# Hämta nyckelordsanalys
-GET /api/keywords?url=https://example.com/page
-
-# Generera nyckelordsanalys
-POST /api/keywords
-{
-  "url": "https://example.com/page",
-  "targetKeywords": ["keyword1", "keyword2"]
-}
-```
-
 #### Innehållsanalys API
 
 ```bash
@@ -328,15 +497,22 @@ GET /api/content-analysis?url=https://example.com/page
 
 ### Lägg till egna keywords
 
-När du genererar förslag, kan du ange egna target keywords:
+**Enklaste sättet**: Använd Settings-fliken i dashboarden!
+1. Gå till Settings-fliken
+2. Scrolla ner till "Hantera nyckelord"
+3. Fyll i keyword, URL och mål-densitet
+4. Klicka "Lägg till nyckelord"
+
+**Programmatiskt**: Via API
 
 ```javascript
-const response = await fetch('/api/text-suggestions', {
-  method: 'POST',
+const response = await fetch('/api/keywords', {
+  method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
+    keyword: 'seo optimering',
     url: 'https://example.com/page',
-    keywords: ['ditt keyword', 'annat keyword', 'seo']
+    target_density: 2.5
   })
 });
 ```
@@ -365,9 +541,10 @@ All logik för att generera förslag finns i:
 ### Viktiga säkerhetsåtgärder:
 
 1. **Håll `.env.local` hemlig** - Lägg ALDRIG till i Git
-2. **Använd CRON_SECRET** i production för att skydda cron endpoints
+2. **API-nycklar ENDAST i .env.local** - Lagra ALDRIG i databasen eller Settings UI
 3. **Service role key** är hemlig - Använd bara server-side
 4. **RLS policies** är aktiverade i Supabase för extra säkerhet
+5. **Settings-tabellen** innehåller ENDAST icke-känsliga konfigurationer
 
 ---
 
@@ -397,16 +574,18 @@ DELETE FROM text_suggestions WHERE url = 'https://example.com/old-page';
 ### Problem: Migrationer fungerar inte
 
 **Lösning**: Kör migrations i rätt ordning:
-1. `initial_schema.sql`
-2. `retention_and_cleanup.sql`
-3. `text_suggestions.sql`
+1. `20250111000000_initial_schema.sql`
+2. `20250111000001_retention_and_cleanup.sql`
+3. `20250114000000_text_suggestions.sql`
+4. `20250116000000_settings_table.sql`
 
-### Problem: "Failed to fetch suggestions"
+### Problem: "Failed to fetch suggestions" eller "Failed to fetch settings"
 
 **Lösning**:
-1. Kontrollera att migrations är körda
+1. Kontrollera att **alla** migrations är körda (inkl. settings_table.sql)
 2. Verifiera Supabase credentials i `.env.local`
 3. Kolla RLS policies i Supabase Dashboard
+4. Kontrollera att `settings`-tabellen existerar i Supabase
 
 ### Problem: PageSpeed API-fel
 
@@ -422,17 +601,21 @@ DELETE FROM text_suggestions WHERE url = 'https://example.com/old-page';
 - [Supabase Documentation](https://supabase.com/docs)
 - [PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started)
 - [Next.js Documentation](https://nextjs.org/docs)
-- [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs)
+- [Google Search Console API](https://developers.google.com/webmaster-tools)
 
 ---
 
 ## 💡 Tips & Best Practices
 
-1. **Börja smått**: Testa med 5-10 sidor först
-2. **Kör regelbundet**: Sätt upp nightly cron för kontinuerlig övervakning
-3. **Prioritera high impact**: Fokusera på förslag med "HIGH IMPACT" först
-4. **Redigera förslag**: AI-genererade förslag är startpunkter - anpassa till din brand voice
-5. **Följ upp resultat**: Jämför scores före/efter tillämpning av förslag
+1. **Konfigurera .env.local först**: Lägg till Supabase-credentials och PSI API-nyckel innan du startar appen
+2. **Använd Settings UI för icke-känsligt**: Site URL, sitemap och max pages kan konfigureras i UI:et
+3. **Lägg till dina sidor**: Använd "Hantera sidor" i Settings för att lägga till specifika sidor att övervaka
+4. **Definiera keywords**: Lägg till viktiga keywords per sida i "Hantera nyckelord" för bättre textförslag
+5. **Börja smått**: Testa med 5-10 sidor först
+6. **Prioritera high impact**: Fokusera på förslag med "HIGH IMPACT" först
+7. **Redigera förslag**: AI-genererade förslag är startpunkter - anpassa till din brand voice
+8. **Följ upp resultat**: Jämför scores före/efter tillämpning av förslag
+9. **Säkerhet först**: Håll API-nycklar i `.env.local`, ALDRIG i databasen eller UI:et
 
 ---
 

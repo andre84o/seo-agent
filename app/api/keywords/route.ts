@@ -1,6 +1,8 @@
 // Keywords API
 // GET: Hämta nyckelordsanalys för en sida
 // POST: Generera nyckelordsanalys
+// PUT: Lägg till/uppdatera keyword manuellt
+// DELETE: Ta bort keyword
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/db/supabase';
@@ -18,17 +20,14 @@ export async function GET(request: NextRequest) {
     const url = searchParams.get('url');
     const runId = searchParams.get('run_id');
 
-    if (!url) {
-      return NextResponse.json(
-        { error: 'URL parameter är required' },
-        { status: 400 }
-      );
-    }
-
     let query = supabase
       .from('keywords')
-      .select('*')
-      .eq('url', url);
+      .select('*');
+
+    // Om url är angiven och inte 'all', filtrera på URL
+    if (url && url !== 'all') {
+      query = query.eq('url', url);
+    }
 
     if (runId) {
       query = query.eq('run_id', runId);
@@ -176,6 +175,154 @@ export async function POST(request: NextRequest) {
     console.error('Error in POST /api/keywords:', error);
     return NextResponse.json(
       { error: 'Failed to analyze keywords: ' + (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// PUT - Lägg till eller uppdatera keyword manuellt
+// ============================================================================
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      keyword,
+      url,
+      target_density,
+      search_volume,
+      difficulty,
+      relevance_score
+    } = body;
+
+    if (!keyword || !url) {
+      return NextResponse.json(
+        { error: 'keyword och url är required' },
+        { status: 400 }
+      );
+    }
+
+    // Kolla om keyword redan finns för denna URL
+    const { data: existing, error: fetchError } = await supabase
+      .from('keywords')
+      .select('*')
+      .eq('url', url)
+      .eq('keyword', keyword)
+      .is('run_id', null) // Bara manuella keywords (utan run_id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows
+      console.error('Error checking existing keyword:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to check existing keyword' },
+        { status: 500 }
+      );
+    }
+
+    const keywordData = {
+      keyword,
+      url,
+      current_count: 0,
+      suggested_count: null,
+      density: 0,
+      target_density: target_density || null,
+      search_volume: search_volume || null,
+      difficulty: difficulty || null,
+      relevance_score: relevance_score || null,
+      status: 'suggested',
+      run_id: null // Manuella keywords har inte run_id
+    };
+
+    let result;
+    if (existing) {
+      // Uppdatera befintlig keyword
+      const { data, error } = await supabase
+        .from('keywords')
+        .update(keywordData)
+        .eq('id', existing.id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating keyword:', error);
+        return NextResponse.json(
+          { error: 'Failed to update keyword' },
+          { status: 500 }
+        );
+      }
+      result = data;
+    } else {
+      // Skapa ny keyword
+      const { data, error } = await supabase
+        .from('keywords')
+        .insert([keywordData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error inserting keyword:', error);
+        return NextResponse.json(
+          { error: 'Failed to add keyword' },
+          { status: 500 }
+        );
+      }
+      result = data;
+    }
+
+    return NextResponse.json({
+      success: true,
+      keyword: result,
+      message: existing ? 'Keyword uppdaterad' : 'Keyword tillagd'
+    });
+
+  } catch (error) {
+    console.error('Error in PUT /api/keywords:', error);
+    return NextResponse.json(
+      { error: 'Failed to save keyword: ' + (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// DELETE - Ta bort keyword
+// ============================================================================
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'id parameter är required' },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase
+      .from('keywords')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting keyword:', error);
+      return NextResponse.json(
+        { error: 'Failed to delete keyword' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Keyword borttagen'
+    });
+
+  } catch (error) {
+    console.error('Error in DELETE /api/keywords:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete keyword: ' + (error as Error).message },
       { status: 500 }
     );
   }

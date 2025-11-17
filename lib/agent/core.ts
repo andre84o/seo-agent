@@ -1,5 +1,6 @@
 // SEO Agent Core
 // Huvudlogik för automatisk SEO-agent med prioritering och historik
+// Uppdaterad med OpenAI-integration för AI-driven analys
 
 import { fetchUrl } from '../mcp/fetch-url';
 import { readSitemap, discoverSitemap } from '../mcp/read-sitemap';
@@ -7,6 +8,8 @@ import { psiAudit } from '../mcp/psi-audit';
 import { gscTopQueries, gscPageData } from '../mcp/gsc-top-queries';
 import { analyzeOnPage, generateOnPageSuggestions } from '../seo/on-page-analysis';
 import { calculateSEOScore, calculatePriority, shouldFlagPage } from '../seo/scoring';
+import { analyzePageWithAI } from '../ai/openai-client';
+import { getPageAnalytics } from '../analytics/google-analytics';
 import {
   createRun,
   updateRun,
@@ -25,8 +28,11 @@ export interface AgentConfig {
   psiApiKey: string;
   gscAccessToken?: string; // Optional
   gscSiteUrl?: string; // Verified site URL i GSC
+  gaPropertyId?: string; // Google Analytics property ID
   maxPagesToCheck?: number; // Default 20
   priorityThreshold?: number; // Bara köra sidor över denna prio
+  useAI?: boolean; // Om AI-analys ska användas (default: true)
+  openaiApiKey?: string; // OpenAI API-nyckel
 }
 
 export interface AgentRunResult {
