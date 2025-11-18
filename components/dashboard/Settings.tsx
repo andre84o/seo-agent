@@ -422,7 +422,7 @@ export default function Settings() {
 
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-muted-foreground">
-                    Senast uppdaterad: {new Date(setting.updated_at).toLocaleString('sv-SE')}
+                    Senast uppdaterad: {new Date(setting.updated_at).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/')}
                   </div>
                   <Button
                     onClick={() => saveSetting(setting.setting_key)}
@@ -635,7 +635,7 @@ export default function Settings() {
                         )}
                         <span>
                           Senast sedd: {page.last_seen_at
-                            ? new Date(page.last_seen_at).toLocaleDateString('sv-SE')
+                            ? new Date(page.last_seen_at).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/')
                             : 'Aldrig'}
                         </span>
                       </div>

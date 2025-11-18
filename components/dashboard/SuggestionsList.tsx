@@ -273,7 +273,7 @@ export default function SuggestionsList() {
                 </a>
 
                 <p className="text-xs text-muted-foreground mt-3">
-                  Created: {new Date(suggestion.created_at).toLocaleString()}
+                  Created: {new Date(suggestion.created_at).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/')}
                 </p>
               </CardContent>
             </Card>

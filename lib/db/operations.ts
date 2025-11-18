@@ -492,11 +492,29 @@ export async function getTasksByPageId(pageId: number): Promise<any[]> {
  * Hämtar alla aktiva tasks (denna veckans prioriterade)
  */
 export async function getActiveTasksThisWeek(): Promise<any[]> {
+  // Try the view first
   const { data, error } = await supabase
     .from('this_week_priority_tasks')
     .select('*');
 
-  if (error) throw new Error(`Failed to fetch this week's tasks: ${error.message}`);
+  // If view doesn't exist or has issues, fallback to direct query
+  if (error) {
+    console.warn('View this_week_priority_tasks not available, using fallback query:', error.message);
+
+    // Fallback: query seo_tasks directly
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('seo_tasks')
+      .select('*')
+      .in('status', ['todo', 'in_progress'])
+      .order('priority', { ascending: true })
+      .order('created_at', { ascending: false });
+
+    if (fallbackError) {
+      throw new Error(`Failed to fetch tasks: ${fallbackError.message}`);
+    }
+    return fallbackData || [];
+  }
+
   return data || [];
 }
 
@@ -504,11 +522,29 @@ export async function getActiveTasksThisWeek(): Promise<any[]> {
  * Hämtar pending AI-suggestions som inte är tasks än
  */
 export async function getPendingAISuggestions(): Promise<any[]> {
+  // Try the view first
   const { data, error } = await supabase
     .from('pending_ai_suggestions')
     .select('*');
 
-  if (error) throw new Error(`Failed to fetch pending AI suggestions: ${error.message}`);
+  // If view doesn't exist, fallback to direct query
+  if (error) {
+    console.warn('View pending_ai_suggestions not available, using fallback query:', error.message);
+
+    // Fallback: query suggestions directly
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('suggestions')
+      .select('*')
+      .eq('ai_generated', true)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (fallbackError) {
+      throw new Error(`Failed to fetch suggestions: ${fallbackError.message}`);
+    }
+    return fallbackData || [];
+  }
+
   return data || [];
 }
 

@@ -1,3 +1,12 @@
+================================================================================
+AI SYSTEM MIGRATION SQL
+================================================================================
+
+📋 Kopiera SQL:en nedan och kör i Supabase Dashboard > SQL Editor:
+
+================================================================================
+
+
 -- AI SEO Tasks & Suggestions Schema
 -- Uppdaterad för att inkludera AI-genererade förslag och todo-system
 
@@ -13,9 +22,6 @@ ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS implementation_notes TEXT;
 -- Lägg till nya kolumner för bättre kategorisering
 ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS suggestion_type VARCHAR(50);
 ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS category VARCHAR(100);
-ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS page_id BIGINT REFERENCES pages(id) ON DELETE CASCADE;
-ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS priority VARCHAR(20) DEFAULT 'medium';
-ALTER TABLE suggestions ADD COLUMN IF NOT EXISTS description TEXT;
 
 -- Index för snabbare queries
 CREATE INDEX IF NOT EXISTS idx_suggestions_ai_generated ON suggestions(ai_generated);
@@ -212,27 +218,27 @@ ORDER BY
 
 -- View: AI suggestions som inte blivit tasks än
 CREATE OR REPLACE VIEW pending_ai_suggestions AS
-SELECT
-  s.suggestion_id,
+SELECT 
+  s.id as suggestion_id,
   s.page_id,
-  COALESCE(p.url, s.url) as url,
-  s.suggestion_type,
+  p.url,
+  s.type as suggestion_type,
   s.priority,
-  COALESCE(s.description, s.action) as description,
+  s.description,
   s.ai_reasoning,
   s.expected_impact,
   s.created_at
 FROM suggestions s
-LEFT JOIN pages p ON s.page_id = p.id
-LEFT JOIN seo_tasks t ON s.suggestion_id = t.suggestion_id
+JOIN pages p ON s.page_id = p.id
+LEFT JOIN seo_tasks t ON s.id = t.suggestion_id
 WHERE s.ai_generated = true
   AND s.status = 'pending'
   AND t.id IS NULL
-ORDER BY
-  CASE s.priority
-    WHEN 'high' THEN 1
-    WHEN 'medium' THEN 2
-    WHEN 'low' THEN 3
+ORDER BY 
+  CASE s.priority 
+    WHEN 'high' THEN 1 
+    WHEN 'medium' THEN 2 
+    WHEN 'low' THEN 3 
   END,
   s.created_at DESC;
 
@@ -267,3 +273,9 @@ COMMENT ON COLUMN seo_tasks.effort_estimate IS 'Uppskattad arbetsinsats för att
 
 COMMENT ON VIEW this_week_priority_tasks IS 'Prioriterade tasks för denna vecka';
 COMMENT ON VIEW pending_ai_suggestions IS 'AI-suggestions som väntar på att bli tasks';
+
+
+
+================================================================================
+✅ När du har kört SQL:en i Supabase Dashboard är migrationen klar!
+================================================================================

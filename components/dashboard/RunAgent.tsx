@@ -13,9 +13,10 @@ import { Loader2, PlayCircle, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface RunAgentProps {
   onRunComplete: () => void;
+  compact?: boolean;
 }
 
-export default function RunAgent({ onRunComplete }: RunAgentProps) {
+export default function RunAgent({ onRunComplete, compact = false }: RunAgentProps) {
   const [siteUrl, setSiteUrl] = useState('');
   const [sitemapUrl, setSitemapUrl] = useState('');
   const [maxPages, setMaxPages] = useState(20);
@@ -61,6 +62,34 @@ export default function RunAgent({ onRunComplete }: RunAgentProps) {
       setIsRunning(false);
     }
   };
+
+  if (compact) {
+    return (
+      <Button
+        onClick={() => {
+          // For compact mode, use last known values or defaults
+          if (siteUrl || window.confirm('No site URL configured. Set one up?')) {
+            handleRun();
+          }
+        }}
+        disabled={isRunning}
+        variant="default"
+        size="sm"
+      >
+        {isRunning ? (
+          <>
+            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+            Running...
+          </>
+        ) : (
+          <>
+            <PlayCircle className="mr-2 h-3 w-3" />
+            Run Agent
+          </>
+        )}
+      </Button>
+    );
+  }
 
   return (
     <Card>

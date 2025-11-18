@@ -110,34 +110,66 @@ export function SEOTasks() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>📋 SEO Todo-lista</CardTitle>
-        <CardDescription>
-          Denna veckans prioriterade uppgifter
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="text-center py-8 text-gray-500">Laddar tasks...</div>
-        ) : (
-          <>
-            <Tabs defaultValue="todo" onValueChange={(v) => setFilter(v as any)}>
-              <TabsList>
-                <TabsTrigger value="all">Alla ({taskCounts.all})</TabsTrigger>
-                <TabsTrigger value="todo">Todo ({taskCounts.todo})</TabsTrigger>
-                <TabsTrigger value="in_progress">Pågående ({taskCounts.in_progress})</TabsTrigger>
-                <TabsTrigger value="done">Klara ({taskCounts.done})</TabsTrigger>
-              </TabsList>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{taskCounts.all}</div>
+            <p className="text-sm text-muted-foreground">Total Tasks</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-md transition-shadow border-orange-200 dark:border-orange-800">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-orange-600">{taskCounts.todo}</div>
+            <p className="text-sm text-muted-foreground">To Do</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-md transition-shadow border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-blue-600">{taskCounts.in_progress}</div>
+            <p className="text-sm text-muted-foreground">In Progress</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:shadow-md transition-shadow border-green-200 dark:border-green-800">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-green-600">{taskCounts.done}</div>
+            <p className="text-sm text-muted-foreground">Completed</p>
+          </CardContent>
+        </Card>
+      </div>
 
-              <div className="mt-4 space-y-3">
+      {/* Tasks List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-xl">📋</span> SEO Tasks
+          </CardTitle>
+          <CardDescription>
+            This week's prioritized tasks and improvements
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading tasks...</div>
+          ) : (
+            <>
+              <Tabs defaultValue="todo" onValueChange={(v) => setFilter(v as any)}>
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="all">All ({taskCounts.all})</TabsTrigger>
+                  <TabsTrigger value="todo">To Do ({taskCounts.todo})</TabsTrigger>
+                  <TabsTrigger value="in_progress">Active ({taskCounts.in_progress})</TabsTrigger>
+                  <TabsTrigger value="done">Done ({taskCounts.done})</TabsTrigger>
+                </TabsList>
+
+              <div className="mt-6 space-y-3">
                 {filteredTasks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Inga tasks {filter !== 'all' && `med status "${filter}"`}
+                  <div className="text-center py-12 text-muted-foreground">
+                    No tasks {filter !== 'all' && `with status "${filter}"`}
                   </div>
                 ) : (
                   filteredTasks.map((task) => (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
+                    <Card key={task.id} className="hover:shadow-md hover:border-primary/50 transition-all">
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -216,10 +248,11 @@ export function SEOTasks() {
                   ))
                 )}
               </div>
-            </Tabs>
-          </>
-        )}
-      </CardContent>
-    </Card>
+              </Tabs>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

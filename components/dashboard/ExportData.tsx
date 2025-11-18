@@ -7,11 +7,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Download, FileText, Lightbulb } from 'lucide-react';
 
-export default function ExportData() {
+interface ExportDataProps {
+  compact?: boolean;
+}
+
+export default function ExportData({ compact = false }: ExportDataProps) {
   const handleExport = (type: 'audits' | 'suggestions') => {
     const url = `/api/agent/export?type=${type}`;
     window.open(url, '_blank');
   };
+
+  if (compact) {
+    return (
+      <Button
+        onClick={() => handleExport('audits')}
+        variant="outline"
+        size="sm"
+      >
+        <Download className="mr-2 h-3 w-3" />
+        Export
+      </Button>
+    );
+  }
 
   return (
     <Card>

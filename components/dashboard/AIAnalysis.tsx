@@ -88,27 +88,31 @@ export function AIAnalysis() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>🤖 AI SEO Analys</CardTitle>
-        <CardDescription>
-          Kör en djupgående AI-driven SEO-analys på en specifik sida
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Input */}
-        <div className="flex gap-2">
-          <Input
-            type="url"
-            placeholder="https://example.com/page"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            disabled={loading}
-          />
-          <Button onClick={runAnalysis} disabled={loading || !url}>
-            {loading ? 'Analyserar...' : 'Analysera'}
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <Card className="border-dashed">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span className="text-2xl">🤖</span> AI SEO Analysis
+          </CardTitle>
+          <CardDescription>
+            Get AI-powered insights and recommendations for any page
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Input */}
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              placeholder="https://example.com/page"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={loading}
+              className="flex-1"
+            />
+            <Button onClick={runAnalysis} disabled={loading || !url} className="px-8">
+              {loading ? 'Analyzing...' : 'Analyze'}
+            </Button>
+          </div>
 
         <div className="flex items-center gap-2">
           <input
@@ -124,40 +128,53 @@ export function AIAnalysis() {
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
-          </div>
+          <Card className="border-destructive bg-destructive/10">
+            <CardContent className="pt-4">
+              <p className="text-destructive">{error}</p>
+            </CardContent>
+          </Card>
         )}
+        </CardContent>
+      </Card>
 
-        {/* Results */}
-        {analysis && (
-          <div className="space-y-6 mt-6">
-            {/* Score & Summary */}
-            <div className="flex items-start gap-4">
-              <div className="text-center">
-                <div
-                  className={`text-5xl font-bold ${
-                    analysis.score >= 80
-                      ? 'text-green-600'
-                      : analysis.score >= 60
-                      ? 'text-yellow-600'
-                      : 'text-red-600'
-                  }`}
-                >
-                  {analysis.score}
+      {/* Results */}
+      {analysis && (
+        <div className="space-y-6">
+          {/* Score & Summary */}
+          <Card className="border-primary/20 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-6">
+                <div className="text-center p-6 bg-white dark:bg-slate-900 rounded-lg shadow-sm">
+                  <div
+                    className={`text-5xl font-bold ${
+                      analysis.score >= 80
+                        ? 'text-green-600'
+                        : analysis.score >= 60
+                        ? 'text-yellow-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {analysis.score}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-2">AI Score</div>
                 </div>
-                <div className="text-sm text-gray-600">AI Score</div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-2">Summary</h3>
+                  <p className="text-muted-foreground leading-relaxed">{analysis.summary}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold mb-2">Sammanfattning</h3>
-                <p className="text-gray-700">{analysis.summary}</p>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <Separator />
+          {/* Tabs for detailed analysis */}
+          <Card>
 
-            {/* Tabs */}
-            <Tabs defaultValue="suggestions">
+            <CardHeader>
+              <CardTitle className="text-lg">Detailed Analysis</CardTitle>
+              <CardDescription>Explore AI-generated recommendations and insights</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="suggestions">
               <TabsList>
                 <TabsTrigger value="suggestions">
                   Förslag ({analysis.suggestions.length})
@@ -281,10 +298,11 @@ export function AIAnalysis() {
                   ))}
                 </TabsContent>
               )}
-            </Tabs>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

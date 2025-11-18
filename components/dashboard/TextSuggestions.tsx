@@ -477,7 +477,7 @@ export default function TextSuggestions({ url }: TextSuggestionsProps) {
                           {/* Applied timestamp */}
                           {suggestion.applied_at && (
                             <div className="mt-3 text-xs text-muted-foreground">
-                              Tillämpades: {new Date(suggestion.applied_at).toLocaleString('sv-SE')}
+                              Tillämpades: {new Date(suggestion.applied_at).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/')}
                             </div>
                           )}
                         </div>

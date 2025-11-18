@@ -157,7 +157,7 @@ export default function RecentRuns() {
                   <div>
                     <p className="text-muted-foreground">Started</p>
                     <p className="font-medium">
-                      {new Date(run.started_at).toLocaleString()}
+                      {new Date(run.started_at).toLocaleDateString('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/-/g, '/')} {new Date(run.started_at).toLocaleTimeString('sv-SE')}
                     </p>
                   </div>
 

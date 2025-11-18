@@ -1,7 +1,7 @@
 'use client';
 
 // Huvudsida för SEO-agent dashboard
-// Visar senaste score, trends, förslag och exportfunktioner
+// Modern layout med sidebar navigation
 
 import { useState } from 'react';
 import RunAgent from '@/components/dashboard/RunAgent';
@@ -13,11 +13,15 @@ import TextSuggestions from '@/components/dashboard/TextSuggestions';
 import Settings from '@/components/dashboard/Settings';
 import { AIAnalysis } from '@/components/dashboard/AIAnalysis';
 import { SEOTasks } from '@/components/dashboard/SEOTasks';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dashboard as DashboardView } from '@/components/dashboard/Dashboard';
+import { Sidebar } from '@/components/dashboard/Sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Play, Download } from 'lucide-react';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Refresh data efter agent run
@@ -26,68 +30,60 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            🤖 AI-Driven SEO Manager
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            OpenAI + Google Search Console + Analytics = Din personliga SEO-expert
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-gray-900 dark:via-blue-900/10 dark:to-gray-800">
+      <div className="flex h-screen">
+        {/* Sidebar */}
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Run Agent Section */}
-        <div className="mb-8">
-          <RunAgent onRunComplete={handleRunComplete} />
-        </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-8 py-6 max-w-7xl">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent mb-1">
+                  {activeTab === 'dashboard' && 'Dashboard'}
+                  {activeTab === 'tasks' && 'SEO Tasks'}
+                  {activeTab === 'ai-analysis' && 'AI Analysis'}
+                  {activeTab === 'overview' && 'Score Overview'}
+                  {activeTab === 'suggestions' && 'Suggestions'}
+                  {activeTab === 'text-suggestions' && 'Text Suggestions'}
+                  {activeTab === 'runs' && 'Run History'}
+                  {activeTab === 'settings' && 'Settings'}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {activeTab === 'dashboard' && 'Overview of your SEO performance'}
+                  {activeTab === 'tasks' && 'Manage your SEO tasks and priorities'}
+                  {activeTab === 'ai-analysis' && 'AI-powered insights and recommendations'}
+                  {activeTab === 'overview' && 'Detailed metrics and performance data'}
+                  {activeTab === 'suggestions' && 'SEO improvement suggestions'}
+                  {activeTab === 'text-suggestions' && 'Content optimization ideas'}
+                  {activeTab === 'runs' && 'Historical run data'}
+                  {activeTab === 'settings' && 'Configure your SEO manager'}
+                </p>
+              </div>
 
-        {/* Export Section */}
-        <div className="mb-8">
-          <ExportData />
-        </div>
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <RunAgent onRunComplete={handleRunComplete} compact />
+                <ExportData compact />
+              </div>
+            </div>
 
-        {/* Tabs Navigation with shadcn */}
-        <Tabs defaultValue="tasks" className="w-full">
-          <Card>
-            <CardHeader>
-              <TabsList className="grid w-full grid-cols-7">
-                <TabsTrigger value="tasks"><i className="bi bi-list-check me-2"></i>Todo</TabsTrigger>
-                <TabsTrigger value="ai-analysis"><i className="bi bi-robot me-2"></i>AI Analys</TabsTrigger>
-                <TabsTrigger value="overview"><i className="bi bi-bar-chart-fill me-2"></i>Score</TabsTrigger>
-                <TabsTrigger value="suggestions"><i className="bi bi-lightbulb-fill me-2"></i>Förslag</TabsTrigger>
-                <TabsTrigger value="text-suggestions"><i className="bi bi-pencil-fill me-2"></i>Text</TabsTrigger>
-                <TabsTrigger value="runs"><i className="bi bi-clock-history me-2"></i>Runs</TabsTrigger>
-                <TabsTrigger value="settings"><i className="bi bi-gear-fill me-2"></i>Settings</TabsTrigger>
-              </TabsList>
-            </CardHeader>
-            <CardContent>
-              <TabsContent value="tasks" className="mt-0">
-                <SEOTasks key={refreshKey} />
-              </TabsContent>
-              <TabsContent value="ai-analysis" className="mt-0">
-                <AIAnalysis />
-              </TabsContent>
-              <TabsContent value="overview" className="mt-0">
-                <ScoreOverview key={refreshKey} />
-              </TabsContent>
-              <TabsContent value="suggestions" className="mt-0">
-                <SuggestionsList key={refreshKey} />
-              </TabsContent>
-              <TabsContent value="text-suggestions" className="mt-0">
-                <TextSuggestions key={refreshKey} />
-              </TabsContent>
-              <TabsContent value="runs" className="mt-0">
-                <RecentRuns key={refreshKey} />
-              </TabsContent>
-              <TabsContent value="settings" className="mt-0">
-                <Settings />
-              </TabsContent>
-            </CardContent>
-          </Card>
-        </Tabs>
-      </main>
+            {/* Content Area */}
+            <div className="space-y-6">
+              {activeTab === 'dashboard' && <DashboardView refreshKey={refreshKey} />}
+              {activeTab === 'tasks' && <SEOTasks key={refreshKey} />}
+              {activeTab === 'ai-analysis' && <AIAnalysis />}
+              {activeTab === 'overview' && <ScoreOverview key={refreshKey} />}
+              {activeTab === 'suggestions' && <SuggestionsList key={refreshKey} />}
+              {activeTab === 'text-suggestions' && <TextSuggestions key={refreshKey} />}
+              {activeTab === 'runs' && <RecentRuns key={refreshKey} />}
+              {activeTab === 'settings' && <Settings />}
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
