@@ -1,0 +1,42 @@
+# Source files (we ship dist)
+src/
+app/
+supabase/
+
+# Config files
+.env*
+.git/
+.github/
+.next/
+.claude/
+*.config.ts
+*.config.mjs
+tsconfig.json
+eslint.config.mjs
+postcss.config.mjs
+components.json
+
+# Development files
+node_modules/
+*.log
+*.md
+!README.md
+
+# Test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Build artifacts
+.turbo/
+coverage/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.sql
+*.js
+!dist/**/*.js
+*.bat

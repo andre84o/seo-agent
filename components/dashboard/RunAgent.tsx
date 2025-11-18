@@ -3,7 +3,7 @@
 // Komponent för att köra SEO-agenten manuellt
 // Tillåter användaren att starta en audit-körning
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,37 @@ export default function RunAgent({ onRunComplete, compact = false }: RunAgentPro
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  // Hämta sparade inställningar vid mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+
+        if (data.success && data.settings) {
+          data.settings.forEach((setting: { setting_key: string; setting_value: string | null }) => {
+            if (setting.setting_key === 'site_url' && setting.setting_value) {
+              setSiteUrl(setting.setting_value);
+            }
+            if (setting.setting_key === 'sitemap_url' && setting.setting_value) {
+              setSitemapUrl(setting.setting_value);
+            }
+            if (setting.setting_key === 'max_pages_per_run' && setting.setting_value) {
+              setMaxPages(parseInt(setting.setting_value));
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const handleRun = async () => {
     if (!siteUrl) {
