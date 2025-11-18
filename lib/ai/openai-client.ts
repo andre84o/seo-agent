@@ -6,7 +6,7 @@ import type { GSCPageData } from '../mcp/gsc-top-queries';
 
 // Initialisera OpenAI klient
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export interface SEOAnalysisInput {
@@ -61,6 +61,11 @@ export interface AIAnalysisResult {
 export async function analyzePageWithAI(
   input: SEOAnalysisInput
 ): Promise<AIAnalysisResult> {
+  // Kolla om API-nyckel finns
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY saknas i environment variables');
+  }
+
   const systemPrompt = `Du är en expert SEO-konsult som analyserar webbsidor och ger konkreta, prioriterade förbättringsförslag.
 
 Din uppgift:
@@ -212,6 +217,11 @@ export async function generateContentSuggestions(
   sections: { heading: string; content: string }[];
   internalLinkSuggestions: string[];
 }> {
+  // Kolla om API-nyckel finns
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY saknas i environment variables');
+  }
+
   const prompt = `Analysera följande content och ge förbättringsförslag för SEO:
 
 URL: ${url}
