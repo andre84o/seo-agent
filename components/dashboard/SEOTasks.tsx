@@ -1,5 +1,4 @@
 // SEO Tasks Component
-// Todo-lista för SEO-uppgifter
 
 'use client';
 
