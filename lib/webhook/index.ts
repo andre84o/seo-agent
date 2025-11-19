@@ -160,7 +160,8 @@ export async function sendPendingSuggestionsWebhook(
     return { success: true, count: 0, error: 'No pending suggestions found' };
   }
 
-  const webhookSuggestions: WebhookSuggestion[] = data.map(item => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const webhookSuggestions: WebhookSuggestion[] = data.map((item: any) => ({
     id: item.id,
     url: item.url,
     section_type: item.section_type,
@@ -214,7 +215,8 @@ export async function sendApprovedSuggestionsWebhook(
     return { success: true, count: 0, error: 'No approved suggestions found' };
   }
 
-  const webhookSuggestions: WebhookSuggestion[] = data.map(item => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const webhookSuggestions: WebhookSuggestion[] = data.map((item: any) => ({
     id: item.id,
     url: item.url,
     section_type: item.section_type,
@@ -240,7 +242,8 @@ export async function sendApprovedSuggestionsWebhook(
 
   // Om framgångsrikt, uppdatera status till 'applied'
   if (result.success) {
-    const ids = data.map(item => item.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ids = data.map((item: any) => item.id);
     await supabase
       .from('text_suggestions')
       .update({
